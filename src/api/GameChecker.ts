@@ -7,18 +7,18 @@ import {
 } from "../@types";
 import { CheckPattern } from "./Engine";
 
-const H = Pattern.Hit;
-
 const gameSideChecker = (
   board: GameCellType[][],
   size: number,
   type: GameCellType
 ): boolean => {
+  const H = Pattern.Hit;
   const pattern: GamePattern = {
     pattern: [H, H, H, H, H],
     index: 0,
-    power: 4
+    power: 0
   };
+
   for (let x = 0; x < size; x++) {
     for (let y = 0; y < size; y++) {
       const direction = CheckPattern(board, x, y, size, type, pattern);
