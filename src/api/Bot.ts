@@ -3,7 +3,6 @@ import {
   Pattern,
   GameCellType,
   GameBoard,
-  Maybe,
   StrategyPower,
   GameTurn
 } from "../@types";
@@ -89,11 +88,11 @@ const BotPlayPatterns: GamePattern[] = [
   }
 ];
 
-export type StrategyResult = Maybe<{
+export type StrategyResult = {
   x: number;
   y: number;
   power: StrategyPower;
-}>;
+};
 
 const getRandomEmptyCell = (
   board: GameCellType[][],
