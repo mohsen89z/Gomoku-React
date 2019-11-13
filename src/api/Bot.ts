@@ -59,6 +59,11 @@ const BotPlayPatterns: GamePattern[] = [
     index: 3,
     power: 3
   },
+  {
+    pattern: [H, E, H, E, H],
+    index: 1,
+    power: 3
+  },
   // Power of 2
   {
     pattern: [E, H, H],
