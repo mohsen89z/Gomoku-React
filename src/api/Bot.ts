@@ -1,157 +1,104 @@
-import { GameCellType, GameTurn, GameBoard, Maybe } from "../@types";
+import {
+  GamePattern,
+  Pattern,
+  GameCellType,
+  GameBoard,
+  Maybe,
+  StrategyPower,
+  GameTurn
+} from "../@types";
+import { CheckPattern, getCell } from "./Engine";
 
-export type StrategyPower = -1 | 0 | 1 | 2 | 3 | 4;
-export interface Strategy {
-  power: StrategyPower;
+const H = Pattern.Hit;
+const E = Pattern.Empty;
+
+const BotPlayPatterns: GamePattern[] = [
+  // Power of 4
+  {
+    pattern: [E, H, H, H, H],
+    index: 0,
+    power: 4
+  },
+  {
+    pattern: [H, E, H, H, H],
+    index: 1,
+    power: 4
+  },
+  {
+    pattern: [H, H, E, H, H],
+    index: 2,
+    power: 4
+  },
+  {
+    pattern: [H, H, H, E, H],
+    index: 3,
+    power: 4
+  },
+  {
+    pattern: [H, H, H, H, E],
+    index: 4,
+    power: 4
+  },
+  // Power of 3
+  {
+    pattern: [E, H, H, H],
+    index: 0,
+    power: 3
+  },
+  {
+    pattern: [H, E, H, H],
+    index: 1,
+    power: 3
+  },
+  {
+    pattern: [H, H, E, H],
+    index: 2,
+    power: 3
+  },
+  {
+    pattern: [H, H, H, E],
+    index: 3,
+    power: 3
+  },
+  // Power of 2
+  {
+    pattern: [E, H, H],
+    index: 0,
+    power: 2
+  },
+  {
+    pattern: [H, E, H],
+    index: 1,
+    power: 2
+  },
+  {
+    pattern: [H, H, E],
+    index: 2,
+    power: 2
+  },
+  // Power of 1
+  {
+    pattern: [E, H],
+    index: 0,
+    power: 1
+  },
+  {
+    pattern: [H, E],
+    index: 1,
+    power: 1
+  }
+];
+
+export type StrategyResult = Maybe<{
   x: number;
   y: number;
-}
-
-const getCell = (
-  board: GameCellType[][],
-  x: number,
-  y: number
-): Maybe<GameCellType> => {
-  if (board[x]) return board[x][y];
-  return undefined;
-};
-
-const horizentalCheck = (
-  board: GameCellType[][],
-  x: number,
-  y: number,
-  power: StrategyPower,
-  size: number,
-  type: GameCellType
-): Maybe<Strategy> => {
-  let check =
-    y + power < size &&
-    Array.from(
-      { length: power },
-      (_, p) => getCell(board, x, y + p) === type
-    ).find(v => !v) === undefined;
-
-  if (check) {
-    if (getCell(board, x, y - 1) === GameCellType.Empty) {
-      return {
-        power,
-        x,
-        y: y - 1
-      };
-    }
-    if (getCell(board, x, y + power) === GameCellType.Empty) {
-      return {
-        power,
-        x,
-        y: y + power
-      };
-    }
-  }
-};
-
-const verticalCheck = (
-  board: GameCellType[][],
-  x: number,
-  y: number,
-  power: StrategyPower,
-  size: number,
-  type: GameCellType
-): Maybe<Strategy> => {
-  let check =
-    x + power < size &&
-    Array.from(
-      { length: power },
-      (_, p) => getCell(board, x + p, y) === type
-    ).find(v => !v) === undefined;
-
-  if (check) {
-    if (getCell(board, x - 1, y) === GameCellType.Empty) {
-      return {
-        power,
-        x: x - 1,
-        y
-      };
-    }
-    if (getCell(board, x + power, y) === GameCellType.Empty) {
-      return {
-        power,
-        x: x + power,
-        y
-      };
-    }
-  }
-};
-
-const crossCheck = (
-  board: GameCellType[][],
-  x: number,
-  y: number,
-  power: StrategyPower,
-  size: number,
-  type: GameCellType
-): Maybe<Strategy> => {
-  let check =
-    x + power < size &&
-    y + power < size &&
-    Array.from(
-      { length: power },
-      (_, p) => getCell(board, x + p, y + p) === type
-    ).find(v => !v) === undefined;
-
-  if (check) {
-    if (getCell(board, x - 1, y - 1) === GameCellType.Empty) {
-      return {
-        power,
-        x: x - 1,
-        y: y - 1
-      };
-    }
-    if (getCell(board, x + power, y + power) === GameCellType.Empty) {
-      return {
-        power,
-        x: x + power,
-        y: y + power
-      };
-    }
-  }
-};
-
-const antiCrossCheck = (
-  board: GameCellType[][],
-  x: number,
-  y: number,
-  power: StrategyPower,
-  size: number,
-  type: GameCellType
-): Maybe<Strategy> => {
-  let check =
-    Array.from(
-      { length: power },
-      (_, p) => getCell(board, x + p, y - p) === type
-    ).find(v => !v) === undefined;
-
-  if (check) {
-    if (getCell(board, x - 1, y + 1) === GameCellType.Empty) {
-      return {
-        power,
-        x: x - 1,
-        y: y + 1
-      };
-    }
-    if (getCell(board, x + power, y - power) === GameCellType.Empty) {
-      return {
-        power,
-        x: x + power,
-        y: y - power
-      };
-    }
-  }
-};
+  power: StrategyPower;
+}>;
 
 const getRandomEmptyCell = (
   board: GameCellType[][],
   size: number
-): Strategy => {
+): StrategyResult => {
   let x = Math.floor(Math.random() * size);
   let y = Math.floor(Math.random() * size);
   while (getCell(board, x, y) !== GameCellType.Empty) {
@@ -166,56 +113,22 @@ const findBestStrategy = (
   board: GameCellType[][],
   size: number,
   type: GameCellType
-): Strategy => {
-  for (let power: StrategyPower = 4; power > 0; power--) {
+) => {
+  for (const pattern of BotPlayPatterns) {
     for (let x = 0; x < size; x++) {
       for (let y = 0; y < size; y++) {
-        // check horizental matching
-        const hCheck = horizentalCheck(
-          board,
-          x,
-          y,
-          power as StrategyPower,
-          size,
-          type
-        );
-        if (hCheck !== undefined) return hCheck;
-
-        // check vertical matching
-        const vCheck = verticalCheck(
-          board,
-          x,
-          y,
-          power as StrategyPower,
-          size,
-          type
-        );
-        if (vCheck !== undefined) return vCheck;
-
-        // check cross matching
-        const cCheck = crossCheck(
-          board,
-          x,
-          y,
-          power as StrategyPower,
-          size,
-          type
-        );
-        if (cCheck !== undefined) return cCheck;
-
-        // check anti cross matching
-        const acCheck = antiCrossCheck(
-          board,
-          x,
-          y,
-          power as StrategyPower,
-          size,
-          type
-        );
-        if (acCheck !== undefined) return acCheck;
+        const direction = CheckPattern(board, x, y, size, type, pattern);
+        if (direction !== undefined) {
+          return {
+            power: pattern.power,
+            x: x + pattern.index * direction.x,
+            y: y + pattern.index * direction.y
+          };
+        }
       }
     }
   }
+
   return getRandomEmptyCell(board, size);
 };
 

@@ -1,69 +1,28 @@
-import { GameCellType, GameTurn, GameBoard, Maybe } from "../@types";
+import {
+  GamePattern,
+  Pattern,
+  GameCellType,
+  GameBoard,
+  GameTurn
+} from "../@types";
+import { CheckPattern } from "./Engine";
 
-const getCell = (
-  board: GameCellType[][],
-  x: number,
-  y: number
-): Maybe<GameCellType> => {
-  if (board[x]) return board[x][y];
-  return undefined;
-};
-
-const horizentalChecker = (
-  board: GameCellType[][],
-  x: number,
-  y: number,
-  type: GameCellType
-) =>
-  Array.from({ length: 5 }, (_, p) => getCell(board, x, y + p) === type).find(
-    v => !v
-  ) === undefined;
-
-const verticalChecker = (
-  board: GameCellType[][],
-  x: number,
-  y: number,
-  type: GameCellType
-) =>
-  Array.from({ length: 5 }, (_, p) => getCell(board, x + p, y) === type).find(
-    v => !v
-  ) === undefined;
-
-const crossChecker = (
-  board: GameCellType[][],
-  x: number,
-  y: number,
-  type: GameCellType
-) =>
-  Array.from(
-    { length: 5 },
-    (_, p) => getCell(board, x + p, y + p) === type
-  ).find(v => !v) === undefined;
-
-const antiCrossChecker = (
-  board: GameCellType[][],
-  x: number,
-  y: number,
-  type: GameCellType
-) =>
-  Array.from(
-    { length: 5 },
-    (_, p) => getCell(board, x + p, y - p) === type
-  ).find(v => !v) === undefined;
+const H = Pattern.Hit;
 
 const gameSideChecker = (
   board: GameCellType[][],
   size: number,
   type: GameCellType
-) => {
+): boolean => {
+  const pattern: GamePattern = {
+    pattern: [H, H, H, H, H],
+    index: 0,
+    power: 4
+  };
   for (let x = 0; x < size; x++) {
     for (let y = 0; y < size; y++) {
-      if (
-        horizentalChecker(board, x, y, type) ||
-        verticalChecker(board, x, y, type) ||
-        crossChecker(board, x, y, type) ||
-        antiCrossChecker(board, x, y, type)
-      ) {
+      const direction = CheckPattern(board, x, y, size, type, pattern);
+      if (direction !== undefined) {
         return true;
       }
     }
